@@ -5,9 +5,6 @@ import {
   translate as t,
 } from '../../../../helpers/api-v3-integration.helper';
 import { v4 as generateUUID } from 'uuid';
-import {
-  times,
-} from 'lodash';
 
 describe('POST /group/:groupId/join', () => {
   const PET_QUEST = 'whale';
@@ -229,9 +226,8 @@ describe('POST /group/:groupId/join', () => {
     });
   });
 
-  context('Party incentive achievements', () => {
+  context.only('Party incentive achievements', () => {
     let user, invitedUsers, party;
-    const NUMBER_OF_INVITES = 3;
 
     beforeEach(async () => {
       let { group, groupLeader, invitees } = await createAndPopulateGroup({
@@ -240,7 +236,7 @@ describe('POST /group/:groupId/join', () => {
           type: 'party',
         },
         members: 1,
-        invites: NUMBER_OF_INVITES,
+        invites: 3,
       });
 
       party = group;
@@ -263,9 +259,9 @@ describe('POST /group/:groupId/join', () => {
     });
 
     it('awards Party On achievement to party of size 4', async () => {
-      await times(NUMBER_OF_INVITES, (index) => {
-        invitedUsers[index].post(`/groups/${party._id}/join`);
-      });
+      let invitePromises = invitedUsers.map(user => user.post(`/groups/${party._id}/join`));
+
+      await Promise.all(invitePromises);
 
       await expect(invitedUsers[0].get('/user')).to.eventually.have.deep.property('achievements.partyOn', true);
       await expect(user.get('/user')).to.eventually.have.deep.property('achievements.partyOn', true);
