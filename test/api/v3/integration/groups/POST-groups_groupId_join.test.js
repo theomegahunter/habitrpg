@@ -5,6 +5,9 @@ import {
   translate as t,
 } from '../../../../helpers/api-v3-integration.helper';
 import { v4 as generateUUID } from 'uuid';
+import {
+  times,
+} from 'lodash';
 
 describe('POST /group/:groupId/join', () => {
   const PET_QUEST = 'whale';
@@ -223,6 +226,49 @@ describe('POST /group/:groupId/join', () => {
         expect(invitedUser).to.have.deep.property('party.quest.key', party.quest.key);
         expect(party.quest.members[invitedUser._id]).to.be.null;
       });
+    });
+  });
+
+  context.only('Party incentive achievements', () => {
+    let user, invitedUsers, party;
+    const NUMBER_OF_INVITES = 3;
+
+    beforeEach(async () => {
+      let { group, groupLeader, invitees } = await createAndPopulateGroup({
+        groupDetails: {
+          name: 'Test Party',
+          type: 'party',
+        },
+        members: 1,
+        invites: NUMBER_OF_INVITES,
+      });
+
+      party = group;
+      user = groupLeader;
+      invitedUsers = invitees;
+    });
+
+    it('awards Party Up achievement to party of size 2', async () => {
+      await invitedUsers[0].post(`/groups/${party._id}/join`);
+
+      await expect(invitedUsers[0].get('/user')).to.eventually.have.deep.property('achievements.partyUp', true);
+      await expect(user.get('/user')).to.eventually.have.deep.property('achievements.partyUp', true);
+    });
+
+    it('does not award Party On achievement to party of size 2', async () => {
+      await invitedUsers[0].post(`/groups/${party._id}/join`);
+
+      await expect(invitedUsers[0].get('/user')).to.eventually.not.have.deep.property('achievements.partyOn', true);
+      await expect(user.get('/user')).to.eventually.not.have.deep.property('achievements.partyOn', true);
+    });
+
+    it('awards Party On achievement to party of size 4', async () => {
+      await times(NUMBER_OF_INVITES, (index) => {
+        invitedUsers[index].post(`/groups/${party._id}/join`);
+      });
+
+      await expect(invitedUsers[0].get('/user')).to.eventually.have.deep.property('achievements.partyOn', true);
+      await expect(user.get('/user')).to.eventually.have.deep.property('achievements.partyOn', true);
     });
   });
 });

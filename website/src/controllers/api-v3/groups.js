@@ -292,9 +292,20 @@ api.joinGroup = {
     group.memberCount += 1;
 
     let promises = [group.save(), user.save()];
+    let partyAchievements;
 
     if (group.type === 'party' && inviter) {
       promises.push(User.update({_id: inviter}, {$inc: {'items.quests.basilist': 1}}).exec()); // Reward inviter
+      if (group.memberCount > 3) {
+        partyAchievements = {$set: {'achievements.partyUp': true, 'achievements.partyOn': true}};
+      } else if (group.memberCount > 1) {
+        partyAchievements = {$set: {'achievements.partyUp': true}};
+      }
+      if (partyAchievements) {
+        _.forEach(group.members, (member) => {
+          promises.push(User.update({_id: member}, partyAchievements).exec()); // Award achievements to whole party
+        });
+      }
     }
 
     await Q.all(promises);
