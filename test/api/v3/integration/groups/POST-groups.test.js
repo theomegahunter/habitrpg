@@ -190,7 +190,7 @@ describe('POST /group', () => {
     });
 
     it('does not award Party Up achievement to solo partier', async () => {
-      let party = await user.post('/groups', {
+      await user.post('/groups', {
         name: partyName,
         type: partyType,
       });

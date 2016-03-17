@@ -229,7 +229,7 @@ describe('POST /group/:groupId/join', () => {
     });
   });
 
-  context.only('Party incentive achievements', () => {
+  context('Party incentive achievements', () => {
     let user, invitedUsers, party;
     const NUMBER_OF_INVITES = 3;
 
