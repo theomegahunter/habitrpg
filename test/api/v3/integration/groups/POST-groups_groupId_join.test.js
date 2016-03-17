@@ -226,7 +226,7 @@ describe('POST /group/:groupId/join', () => {
     });
   });
 
-  context.only('Party incentive achievements', () => {
+  context('Party incentive achievements', () => {
     let user, invitedUsers, party;
 
     beforeEach(async () => {
@@ -259,7 +259,7 @@ describe('POST /group/:groupId/join', () => {
     });
 
     it('awards Party On achievement to party of size 4', async () => {
-      let invitePromises = invitedUsers.map(user => user.post(`/groups/${party._id}/join`));
+      let invitePromises = invitedUsers.map(member => member.post(`/groups/${party._id}/join`));
 
       await Promise.all(invitePromises);
 
