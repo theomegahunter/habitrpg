@@ -302,9 +302,7 @@ api.joinGroup = {
         partyAchievements = {$set: {'achievements.partyUp': true}};
       }
       if (partyAchievements) {
-        _.forEach(group.members, (member) => {
-          promises.push(User.update({_id: member}, partyAchievements).exec()); // Award achievements to whole party
-        });
+        promises.push(User.update({'party._id': group._id}, partyAchievements, {multi: true}).exec()); // Award achievements to whole party
       }
     }
 

@@ -197,7 +197,7 @@ describe('POST /group', () => {
 
       let updatedUser = await user.get('/user');
 
-      expect(updatedUser.achievements.partyUp).to.not.be(true);
+      expect(updatedUser.achievements.partyUp).to.not.eql(true);
     });
 
     it('prevents user in a party from creating another party', async () => {
