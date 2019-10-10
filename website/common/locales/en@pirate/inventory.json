@@ -1,0 +1,8 @@
+{
+    "noItemsAvailableForType": "Ye 'ave no <%= type %>.",
+    "foodItemType": "Pet Feed",
+    "eggsItemType": "Cackle Fruit",
+    "hatchingPotionsItemType": "Hatchin' Potions",
+    "specialItemType": "Special items",
+    "lockedItem": "Lock'd Item"
+}

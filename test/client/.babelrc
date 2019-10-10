@@ -1,0 +1,16 @@
+{
+  "env": {
+    "test": {
+      plugins: [
+        ["istanbul"],
+      ],
+    },
+  },
+  "presets": [
+    ["es2015", { modules: false }],
+  ],
+  "plugins": [
+    "transform-object-rest-spread",
+  ],
+  "comments": false,
+}

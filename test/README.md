@@ -1,5 +1,1 @@
-We need to clean up this directory. The *real* tests are in spec/ mock/ e2e/ and api.mocha.coffee. We want to:
-
-1. Move all old / deprecated tests from casper, test2, etc into spec, mock, e2e
-1. Remove dependency of api.mocha.coffee on Derby, port it to Mongoose
-1. Add better test-coverage
+For information about writing and running tests, see [Using Your Local Install to Modify Habitica's Website and API](http://habitica.fandom.com/wiki/Using_Your_Local_Install_to_Modify_Habitica%27s_Website_and_API).

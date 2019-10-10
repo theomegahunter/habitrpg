@@ -1,63 +1,87 @@
-var migrationName = 'new_stuff.js';
-var authorName = 'Sabe'; // in case script author needs to know when their ...
-var authorUuid = '7f14ed62-5408-4e1b-be83-ada62d504931'; //... own data is done
+/* let migrationName = 'new_stuff.js'; */
+let authorName = 'Sabe'; // in case script author needs to know when their ...
+let authorUuid = '7f14ed62-5408-4e1b-be83-ada62d504931'; // ... own data is done
 
 /*
  * set the newStuff flag in all user accounts so they see a Bailey message
  */
 
-var dbserver = 'localhost:27017'; // FOR TEST DATABASE
-// var dbserver = 'username:password@ds031379-a0.mongolab.com:31379'; // FOR PRODUCTION DATABASE
-var dbname = 'habitrpg';
+let monk = require('monk');
+let connectionString = 'mongodb://localhost:27017/habitrpg?auto_reconnect=true'; // FOR TEST DATABASE
+let dbUsers = monk(connectionString).get('users', { castIds: false });
 
-var mongo = require('mongoskin');
-var _ = require('lodash');
+function processUsers (lastId) {
+  // specify a query to limit the affected users (empty for all users):
+  let query = {
+    'flags.newStuff': {$ne: true},
+  };
 
-var dbUsers = mongo.db(dbserver + '/' + dbname + '?auto_reconnect').collection('users');
-
-// specify a query to limit the affected users (empty for all users):
-var query = {
-  'flags.newStuff':false
-};
-
-// specify fields we are interested in to limit retrieved data (empty if we're not reading data):
-var fields = {
-  'flags.newStuff':1
-};
-
-console.warn('Updating users...');
-var progressCount = 1000;
-var count = 0;
-dbUsers.findEach(query, fields, {batchSize:250}, function(err, user) {
-  if (err) { return exiting(1, 'ERROR! ' + err); }
-  if (!user) {
-    console.warn('All appropriate users found and modified.');
-    return displayData();
+  if (lastId) {
+    query._id = {
+      $gt: lastId,
+    };
   }
+
+  dbUsers.find(query, {
+    sort: {_id: 1},
+    limit: 250,
+    fields: [], // specify fields we are interested in to limit retrieved data (empty if we're not reading data):
+  })
+    .then(updateUsers)
+    .catch((err) => {
+      console.log(err);
+      return exiting(1, `ERROR! ${  err}`);
+    });
+}
+
+let progressCount = 1000;
+let count = 0;
+
+function updateUsers (users) {
+  if (!users || users.length === 0) {
+    console.warn('All appropriate users found and modified.');
+    displayData();
+    return;
+  }
+
+  let userPromises = users.map(updateUser);
+  let lastUser = users[users.length - 1];
+
+  return Promise.all(userPromises)
+    .then(() => {
+      processUsers(lastUser._id);
+    });
+}
+
+function updateUser (user) {
   count++;
 
-  // specify user data to change:
-  var set = {'migration':migrationName, 'flags.newStuff':true};
+  let set = {'flags.newStuff': true};
 
-  dbUsers.update({_id:user._id}, {$set:set});
+  dbUsers.update({_id: user._id}, {$set: set});
 
-  if (count%progressCount == 0) console.warn(count + ' ' + user._id);
-  if (user._id == authorUuid) console.warn(authorName + ' processed');
-});
+  if (count % progressCount === 0) console.warn(`${count  } ${  user._id}`);
+  if (user._id === authorUuid) console.warn(`${authorName  } processed`);
+}
 
-
-function displayData() {
-  console.warn('\n' + count + ' users processed\n');
+function displayData () {
+  console.warn(`\n${  count  } users processed\n`);
   return exiting(0);
 }
 
-
-function exiting(code, msg) {
+function exiting (code, msg) {
   code = code || 0; // 0 = success
-  if (code && !msg) { msg = 'ERROR!'; }
+  if (code && !msg) {
+    msg = 'ERROR!';
+  }
   if (msg) {
-    if (code) { console.error(msg); }
-    else      { console.log(  msg); }
+    if (code) {
+      console.error(msg);
+    } else      {
+      console.log(msg);
+    }
   }
   process.exit(code);
 }
+
+module.exports = processUsers;

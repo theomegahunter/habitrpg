@@ -1,10 +1,11 @@
 /* eslint-disable no-use-before-define */
-
+import moment from 'moment';
 import { requester } from './requester';
 import {
   getDocument as getDocumentFromMongo,
   updateDocument as updateDocumentInMongo,
-} from './mongo';
+  unsetDocument as unsetDocumentInMongo,
+} from '../mongo';
 import {
   assign,
   each,
@@ -25,6 +26,18 @@ class ApiObject {
     await updateDocumentInMongo(this._docType, this, options);
 
     _updateLocalParameters(this, options);
+
+    return this;
+  }
+
+  async unset (options) {
+    if (isEmpty(options)) {
+      return;
+    }
+
+    await unsetDocumentInMongo(this._docType, this, options);
+
+    _updateLocalParameters((this, options));
 
     return this;
   }
@@ -58,6 +71,42 @@ export class ApiGroup extends ApiObject {
     super(options);
 
     this._docType = 'groups';
+  }
+
+  async addChat (chat) {
+    let group = this;
+
+    if (!chat) {
+      chat = {
+        id: 'Test_ID',
+        text: 'Test message',
+        flagCount: 0,
+        timestamp: Date(),
+        likes: {},
+        flags: {},
+        uuid: group.leader,
+        contributor: {},
+        backer: {},
+        user: group.leader,
+      };
+    }
+
+    let update = { chat };
+
+    return await this.update(update);
+  }
+
+  async createCancelledSubscription () {
+    let update = {
+      purchased: {
+        plan: {
+          customerId: 'example-customer',
+          dateTerminated: moment().add(1, 'days').toDate(),
+        },
+      },
+    };
+
+    return await this.update(update);
   }
 }
 

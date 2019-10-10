@@ -1,0 +1,14 @@
+# Compiled and vendored files
+coverage/
+database_reports/
+website/build/
+website/transpiled-babel/
+website/common/transpiled-babel/
+dist/
+dist-client/
+apidoc_build/
+content_cache/
+node_modules/
+
+# Old migrations, disabled
+migrations/archive/*

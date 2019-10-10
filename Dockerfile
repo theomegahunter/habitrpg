@@ -1,42 +1,30 @@
-FROM ubuntu:trusty
+FROM node:12
 
-MAINTAINER Sabe Jones <sabe@habitica.com>
-
-# Avoid ERROR: invoke-rc.d: policy-rc.d denied execution of start.
-RUN echo -e '#!/bin/sh\nexit 0' > /usr/sbin/policy-rc.d
-
-# Install prerequisites
-RUN apt-get update
-RUN apt-get install -y \
-    build-essential \
-    curl \
-    git \
-    libfontconfig1 \
-    libfreetype6 \
-    libkrb5-dev \
-    python
-
-# Install NodeJS
-RUN curl -sL https://deb.nodesource.com/setup_4.x | sudo -E bash -
-RUN apt-get install -y nodejs
-
-# Clean up package management
-RUN apt-get clean
-RUN rm -rf /var/lib/apt/lists/*
+ENV ADMIN_EMAIL admin@habitica.com
+ENV AMAZON_PAYMENTS_CLIENT_ID amzn1.application-oa2-client.68ed9e6904ef438fbc1bf86bf494056e
+ENV AMAZON_PAYMENTS_SELLER_ID AMQ3SB4SG5E91
+ENV AMPLITUDE_KEY e8d4c24b3d6ef3ee73eeba715023dd43
+ENV BASE_URL https://habitica.com
+ENV FACEBOOK_KEY 128307497299777
+ENV GA_ID UA-33510635-1
+ENV GOOGLE_CLIENT_ID 1035232791481-32vtplgnjnd1aufv3mcu1lthf31795fq.apps.googleusercontent.com
+ENV LOGGLY_CLIENT_TOKEN ab5663bf-241f-4d14-8783-7d80db77089a
+ENV NODE_ENV production
+ENV STRIPE_PUB_KEY pk_85fQ0yMECHNfHTSsZoxZXlPSwSNfA
 
 # Install global packages
-RUN npm install -g gulp grunt-cli bower
+RUN npm install -g gulp-cli mocha
 
 # Clone Habitica repo and install dependencies
-WORKDIR /habitrpg
-RUN git clone https://github.com/HabitRPG/habitrpg.git /habitrpg
+RUN mkdir -p /usr/src/habitrpg
+WORKDIR /usr/src/habitrpg
+RUN git clone --branch release --depth 1 https://github.com/HabitRPG/habitica.git /usr/src/habitrpg
 RUN npm install
-RUN bower install --allow-root
+RUN gulp build:prod --force
 
-# Create environment config file and build directory
-RUN cp config.json.example config.json
+# Create Build dir
 RUN mkdir -p ./website/build
 
 # Start Habitica
 EXPOSE 3000
-CMD ["npm", "start"]
+CMD ["node", "./website/transpiled-babel/index.js"]

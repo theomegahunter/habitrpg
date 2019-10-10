@@ -1,17 +1,29 @@
 language: node_js
 node_js:
-  - '4.3.1'
-before_install:
-  - "npm install -g npm@2"
-  - "npm install -g gulp"
-  - "sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 7F0CEB10"
-  - "echo 'deb http://downloads-distro.mongodb.org/repo/ubuntu-upstart dist 10gen' | sudo tee /etc/apt/sources.list.d/mongodb.list"
-  - "sudo apt-get update"
-  - "sudo apt-get install mongodb-org-server"
+  - '12'
+services:
+  - mongodb
+cache:
+  directories:
+    - 'node_modules'
+addons:
+  chrome: stable
 before_script:
-  - 'npm install -g grunt-cli mocha'
+  - npm run test:build
   - cp config.json.example config.json
-  - "until nc -z localhost 27017; do echo Waiting for MongoDB; sleep 1; done"
-  - "export DISPLAY=:99"
-after_script:
-  - "./node_modules/.bin/lcov-result-merger 'coverage/**/*.info' | ./node_modules/coveralls/bin/coveralls.js"
+  - sleep 5
+script:
+  - npm run $TEST
+env:
+  global:
+    - DISABLE_REQUEST_LOGGING=true
+  matrix:
+    - TEST="lint"
+    - TEST="test:api:unit" REQUIRES_SERVER=true COVERAGE=true
+    - TEST="test:api-v3:integration" REQUIRES_SERVER=true COVERAGE=true
+    - TEST="test:api-v4:integration" REQUIRES_SERVER=true COVERAGE=true
+    - TEST="test:sanity"
+    - TEST="test:content" COVERAGE=true
+    - TEST="test:common" COVERAGE=true
+    - TEST="client:unit" COVERAGE=true
+    - TEST="apidoc"
